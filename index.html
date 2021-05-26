@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projectile Motion Simulation</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Open+Sans:300,400"
+      rel="stylesheet"
+    />
+
+    <style>
+      html,
+      body {
+        height: 100%;
+        font-family: "Open Sans", Arial, Helvetica, sans-serif;
+        color: #f2f2f2;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      button {
+        border: none;
+      }
+
+      body {
+        /* display: flex;
+justify-content: center;
+align-items: center; */
+        background-color: rgb(76, 130, 153);
+        overflow: hidden;
+      }
+
+      .btn {
+        top: 0;
+        left: 0;
+        transition: all 0.15s linear 0s;
+        position: relative;
+        display: inline-block;
+        padding: 15px 25px;
+        background-color: #ffe800;
+        text-transform: uppercase;
+        color: #404040;
+        font-family: arial;
+        letter-spacing: 1px;
+        box-shadow: -6px 6px 0 #404040;
+        text-decoration: none;
+      }
+      .btn:hover {
+        top: 3px;
+        left: -3px;
+        box-shadow: -3px 3px 0 #404040;
+      }
+      .btn:hover::after {
+        top: 1px;
+        left: -2px;
+        width: 4px;
+        height: 4px;
+      }
+      .btn:hover::before {
+        bottom: -2px;
+        right: 1px;
+        width: 4px;
+        height: 4px;
+      }
+      .btn::after {
+        transition: all 0.15s linear 0s;
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: -4px;
+        width: 8px;
+        height: 8px;
+        background-color: #404040;
+        transform: rotate(45deg);
+        z-index: -1;
+      }
+      .btn::before {
+        transition: all 0.15s linear 0s;
+        content: "";
+        position: absolute;
+        bottom: -4px;
+        right: 2px;
+        width: 8px;
+        height: 8px;
+        background-color: #404040;
+        transform: rotate(45deg);
+        z-index: -1;
+      }
+
+      a.btn {
+        position: relative;
+      }
+
+      a:active.btn {
+        top: 6px;
+        left: -6px;
+        box-shadow: none;
+      }
+      a:active.btn:before {
+        bottom: 1px;
+        right: 1px;
+      }
+      a:active.btn:after {
+        top: 1px;
+        left: 1px;
+      }
+
+      /*******************************************
+********************************************
+*******************************************/
+      #controls {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0.5rem 4rem;
+        position: relative;
+        z-index: 5;
+      }
+      #results {
+        position: absolute;
+        z-index: 5;
+      }
+      h3 {
+        text-align: center;
+        color: #000000;
+        box-shadow: 0 0 10 10;
+        box-shadow: -3px 3px 0 #404040;
+      }
+
+      input {
+        display: block;
+        width: 60%;
+        font-size: 14pt;
+        line-height: 15pt;
+        font-family: "Fjalla One";
+        margin-bottom: 28pt;
+        border: none;
+        border-bottom: 5px solid black;
+        background: transparent;
+        min-width: 250px;
+        padding-left: 5px;
+        outline: none;
+        color: black;
+      }
+      label {
+        font-size: 14pt;
+      }
+
+      #canvasContainer {
+        position: absolute;
+        top: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- <header>
+    <h3 >Projectile Motion Simulation</h3>
+    </header> -->
+    <div id="controls">
+      <div id="velocity-controls">
+        <label for="velocity">Velocity :</label>
+        <input
+          id="velocity"
+          type="number"
+          min="1"
+          max="50"
+          value="1"
+          required
+        />
+      </div>
+      <div id="angle-controls">
+        <label for="angle">Angle :</label>
+        <input id="angle" type="number" value="0" required />
+      </div>
+
+      <button id="launch" class="btn" type="submit">Launch</button>
+      <button id="reset" class="btn">Reset</button>
+    </div>
+    <div id="results"></div>
+    <div id="canvasContainer"></div>
+    <img
+      id="tankBody"
+      src="tankbody.svg"
+      style="display: none"
+      height="100"
+      width="1️00"
+    />
+    <img
+      id="tankCannon"
+      src="tankCannon.svg"
+      style="display: none"
+      height="100"
+      width="1️00"
+    />
+    <img
+      id="watermelon"
+      src="06.svg"
+      width="100"
+      height="100"
+      style="display: none"
+    />
+    <!-- <img id="watermelon" src="05.svg" /> -->
+    <script>
+      let velocity = document.getElementById("velocity")
+      var angle = document.getElementById("angle")
+      let canvasContainer = document.getElementById("canvasContainer")
+      let launchBtn = document.getElementById("launch")
+      let resetBtn = document.getElementById("reset")
+      let results = document.getElementById("results")
+      let myangle = angle.value
+
+      let x = 0
+      let y = 460
+      let firing = false
+      let velX = 0
+      let velY = 0
+      let gravity = 9.8 / 60
+      let minY = 460
+      let maxX = 0
+      let ground = 600
+
+      let canvasWidth = document.body.clientWidth
+
+      var canvas = document.createElement("canvas")
+      canvas.id = "canvas"
+      var ctx = canvas.getContext("2d")
+      canvas.width = canvasWidth
+      canvas.height = 800
+      canvasContainer.appendChild(canvas)
+      cWidth = canvas.width
+      cHeight = canvas.height
+
+      //Event Listeners
+
+      launchBtn.addEventListener("click", () => {
+        firing = true
+
+        let initialAnimation = setInterval(() => {
+          console.log(`My Angle : ${myangle}\nAngle: ${angle.value}`)
+          if (myangle < angle.value) myangle = parseInt(myangle) + 1
+          else if (myangle > angle.value) myangle -= 1
+          else {
+            clearInterval(initialAnimation)
+            console.log((-myangle * Math.PI) / 180)
+            //cancelAnimationFrame(idRAF);
+            //ANIMATION
+            //Set animation frame
+            setTimeout(() => {
+              velX = Math.cos((-myangle * Math.PI) / 180) * velocity.value //Equation
+              velY = Math.sin((-myangle * Math.PI) / 180) * velocity.value
+
+              let firingAnimation = setInterval(() => {
+                if (y <= ground && firing) {
+                  velY += gravity
+                  x += velX
+                  y += velY
+                  if (minY > y) {
+                    minY = y
+                  }
+                } else {
+                  //When ball hits the ground
+                  maxX = x
+                  velX = 0
+                  velY = 0
+                  firing = false
+                  clearInterval(firingAnimation)
+                  console.log(y - minY) // height between max y & y final
+                  //cancelAnimationFrame(idRAF);
+                  results.innerHTML = `<pre>Distance travelled in X-direction is : ${Math.abs(
+                    maxX.toFixed(2),
+                  )}<br/>Distance travelled in Y-direction is : ${Math.abs(
+                    (y - minY).toFixed(2),
+                  )}</pre>`
+                }
+              }, 5)
+            }, 1000)
+          }
+        }, 5)
+
+        //fireBall()
+      })
+
+      resetBtn.addEventListener("click", () => {
+        console.log(`reset clicked`)
+        velocity.value = 1
+        myangle = 45
+        firing = false
+        x = 0
+        y = 460
+        velX = 0
+        velY = 0
+        minY = 460
+        results.innerHTML = ""
+      })
+
+      var drawScene = function () {
+        var ground = 600
+        // sky
+        var grd = ctx.createLinearGradient(0, 0, 0, 600)
+        grd.addColorStop(0, "rgb(76, 130, 153)")
+        grd.addColorStop(1, "white")
+        ctx.fillStyle = grd
+        ctx.fillRect(0, 0, cWidth, ground)
+        // ground
+        ctx.beginPath()
+        ctx.moveTo(0, ground)
+        ctx.lineTo(cWidth, ground)
+        ctx.strokeStyle = "rgb(44, 176, 55)"
+        ctx.stroke()
+        ctx.fillStyle = "rgb(44, 176, 55)"
+        ctx.fillRect(0, ground, cWidth, cHeight)
+
+        var tankBody = document.getElementById("tankBody")
+        ctx.drawImage(tankBody, 55, 520, 100, 100)
+      }
+
+      let drawTankCannon = function () {
+        var tankCannon = document.getElementById("tankCannon")
+
+        var offscreenCanvas = document.createElement("canvas")
+        var offscreenCtx = offscreenCanvas.getContext("2d")
+        offscreenCanvas.width = 200
+        offscreenCanvas.height = 200
+
+        offscreenCtx.save()
+
+        offscreenCtx.translate(100, 100)
+        offscreenCtx.rotate((-myangle * Math.PI) / 180)
+
+        offscreenCtx.drawImage(tankCannon, -2, -8, 100, 100)
+
+        ctx.drawImage(offscreenCanvas, 3, 460)
+      }
+
+      let drawBall = function () {
+        var ball = document.getElementById("watermelon")
+        ctx.save()
+
+        var offscreenCanvas = document.createElement("canvas")
+        var offscreenCtx = offscreenCanvas.getContext("2d")
+        offscreenCanvas.width = 200
+        offscreenCanvas.height = 200
+
+        offscreenCtx.translate(100, 100)
+        offscreenCtx.rotate((-myangle * Math.PI) / 180)
+
+        offscreenCtx.drawImage(ball, 25, -25, 40, 40)
+
+        ctx.drawImage(offscreenCanvas, x + 3, y)
+        ctx.restore()
+
+        // console.log("drawball")
+      }
+
+      function loopIA() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        drawScene()
+
+        drawTankCannon()
+        drawBall()
+
+        window.requestAnimationFrame(loopIA)
+      }
+
+      let idRAF = window.requestAnimationFrame(loopIA)
+    </script>
+  </body>
+</html>
